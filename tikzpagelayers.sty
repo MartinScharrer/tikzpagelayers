@@ -1,12 +1,13 @@
 
-
 \RequirePackage{atbegshi}
 \RequirePackage{tikz}
 \usetikzlibrary{backgrounds}
 \RequirePackage{etoolbox}
+\RequirePackage{zref-abspos}
 
 \newcommand\tikzpagemark[1]{%
-    \tikz[overlay,remember picture] \coordinate ({tikzpagemark-#1});%
+    \leavevmode
+    \zsavepos{tikzpagemark-#1}%
 }
 
 \newcommand\tikzpagelayer[3][foreground]{%
@@ -22,8 +23,8 @@
 }
 
 \def\set@tikzpagemark#1{%
-    \coordinate (tplbegin) at (tikzpagemark-#1-begin);
-    \coordinate (tplend)   at (tikzpagemark-#1-end);
+    \coordinate (tplbegin) at ([shift={(\zposx{tikzpagemark-#1-begin}sp,\zposy{tikzpagemark-#1-begin}sp)}]current page.south west);
+    \coordinate (tplend)   at ([shift={(\zposx{tikzpagemark-#1-end}sp,\zposy{tikzpagemark-#1-end}sp)}]current page.south west);
 }
 
 \newcounter{tikzpagemark}
@@ -40,9 +41,7 @@
     \setbox\AtBeginShipoutBox\hbox{%
         \color@setgroup
         \begin{tikzpicture}[remember picture]%
-            \begin{scope}%
-                \path [use as bounding box] node [inner sep=0pt,outer sep=0pt] (PAGEBOX) {\box\AtBeginShipoutBox};
-            \end{scope}%
+            \path [use as bounding box] node [inner sep=0pt,outer sep=0pt] (PAGEBOX) {\box\AtBeginShipoutBox};
             \begin{pgfonlayer}{background}
             \begin{scope}%
                 \tikzpagelayer@background
