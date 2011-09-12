@@ -1,0 +1,63 @@
+
+
+\RequirePackage{atbegshi}
+\RequirePackage{tikz}
+\usetikzlibrary{backgrounds}
+\RequirePackage{etoolbox}
+
+\newcommand\tikzpagemark[1]{%
+    \tikz[overlay,remember picture] \coordinate ({tikzpagemark-#1});%
+}
+
+\newcommand\tikzpagelayer[3][background]{%
+    \tikzpagelayeron
+    \stepcounter{tikzpagemark}%
+    \tikzpagemark{\thetikzpagemark-begin}%
+    \csxappto{tikzpagelayer@#1}{%
+        \noexpand\set@tikzpagemark{\thetikzpagemark}%
+        \unexpanded{#2}%
+    }%
+    #3%
+    \tikzpagemark{\thetikzpagemark-end}%
+}
+
+\def\set@tikzpagemark#1{%
+    \coordinate (begin) at (tikzpagemark-#1-begin);
+    \coordinate (end)   at (tikzpagemark-#1-end);
+}
+
+\newcounter{tikzpagemark}
+
+\def\@tikzpagelayeron{%
+    \AtBeginShipoutNext{\tikzpagelayer@atbeginshipout}%
+    \global\let\tikzpagelayeron\relax
+}
+\let\tikzpagelayeron\@tikzpagelayeron
+\let\tikzpagelayer@background\empty
+\let\tikzpagelayer@foreground\empty
+
+\def\tikzpagelayer@atbeginshipout{%
+    \setbox\AtBeginShipoutBox\hbox{%
+        \color@setgroup
+        \begin{tikzpicture}[remember picture]%
+            \begin{scope}%
+                \path [use as bounding box] node [inner sep=0pt,outer sep=0pt] (A) {\box\AtBeginShipoutBox};
+            \end{scope}%
+            \begin{pgfonlayer}{background}
+            \begin{scope}%
+                \show\tikzpagelayer@background
+                \tikzpagelayer@background
+            \end{scope}%
+            \end{pgfonlayer}
+            \begin{scope}%
+                \show\tikzpagelayer@foreground
+                \tikzpagelayer@foreground
+            \end{scope}%
+        \end{tikzpicture}%
+        \color@endgroup
+    }%
+    \global\let\tikzpagelayer@background\empty
+    \global\let\tikzpagelayer@foreground\empty
+    \global\let\tikzpagelayeron\@tikzpagelayeron
+}
+
