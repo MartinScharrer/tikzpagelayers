@@ -9,7 +9,7 @@
     \tikz[overlay,remember picture] \coordinate ({tikzpagemark-#1});%
 }
 
-\newcommand\tikzpagelayer[3][background]{%
+\newcommand\tikzpagelayer[3][foreground]{%
     \tikzpagelayeron
     \stepcounter{tikzpagemark}%
     \tikzpagemark{\thetikzpagemark-begin}%
@@ -22,8 +22,8 @@
 }
 
 \def\set@tikzpagemark#1{%
-    \coordinate (begin) at (tikzpagemark-#1-begin);
-    \coordinate (end)   at (tikzpagemark-#1-end);
+    \coordinate (tplbegin) at (tikzpagemark-#1-begin);
+    \coordinate (tplend)   at (tikzpagemark-#1-end);
 }
 
 \newcounter{tikzpagemark}
@@ -41,16 +41,14 @@
         \color@setgroup
         \begin{tikzpicture}[remember picture]%
             \begin{scope}%
-                \path [use as bounding box] node [inner sep=0pt,outer sep=0pt] (A) {\box\AtBeginShipoutBox};
+                \path [use as bounding box] node [inner sep=0pt,outer sep=0pt] (PAGEBOX) {\box\AtBeginShipoutBox};
             \end{scope}%
             \begin{pgfonlayer}{background}
             \begin{scope}%
-                \show\tikzpagelayer@background
                 \tikzpagelayer@background
             \end{scope}%
             \end{pgfonlayer}
             \begin{scope}%
-                \show\tikzpagelayer@foreground
                 \tikzpagelayer@foreground
             \end{scope}%
         \end{tikzpicture}%

@@ -3,13 +3,36 @@
 \usepackage{tikzpagelayer}
 \usepackage{lipsum}
 
+\usetikzlibrary{decorations.pathmorphing}
+
 \begin{document}
 \lipsum[1-3] % for comparison
 \clearpage
 
 \lipsum[1]
 
-\tikzpagelayer{\draw (begin) -- (end);}{\lipsum*[2]\unskip}%
+\tikzpagelayer[background]{%
+    \path [fill=yellow,thick,draw=green]
+        ([shift={(-15pt-\fboxsep,\ht\strutbox+.5\pgflinewidth)}]tplbegin)
+        rectangle
+        ([shift={(\fboxsep,-\fboxsep-.5\pgflinewidth)}]tplend)
+    ;
+}{\lipsum*[2]\unskip}%
+
+\tikzpagelayer{\draw[red] (tplbegin) -- (tplend);}{\lipsum*[3]\unskip}%
+
+\lipsum[3]
+
+
+\clearpage
+
+\lipsum[1]
+
+\tikzpagelayer[foreground]{\draw[red] (tplbegin) -- (tplend); 
+    \scope[on background layer]\draw [thick,green] (tplbegin) |- (tplend); \endscope
+}{\lipsum*[2]\unskip}%
+
+\tikzpagelayer{\draw[red] (tplbegin) -- (tplend);}{\lipsum*[3]\unskip}%
 
 \lipsum[3]
 
