@@ -1,28 +1,51 @@
 
+\ProvidesPackage{tikzpagelayers}[2011/09/15 v1.0 Draw with TikZ before or behind text on the page]
+\RequirePackage{tikzpagenodes}
 \RequirePackage{atbegshi}
 \RequirePackage{tikz}
-\usetikzlibrary{backgrounds}
-\RequirePackage{etoolbox}
+\usetikzlibrary{backgrounds,calc}
 \RequirePackage{zref-abspos}
 
-\newcommand\tikzpagemark[1]{%
+\newcommand\tikzpagemark{}
+\DeclareRobustCommand\tikzpagemark[1]{%
     \leavevmode
     \zsavepos{tikzpagemark-#1}%
 }
 
-\newcommand\tikzpagelayer[3][foreground]{%
-    \tikzpagelayeron
+\newenvironment{tikzpagelayer}[2][foreground]{%
     \stepcounter{tikzpagemark}%
+    \tikzpagelayeron
     \tikzpagemark{\thetikzpagemark-begin}%
-    \csxappto{tikzpagelayer@#1}{%
-        \noexpand\set@tikzpagemark{\thetikzpagemark}%
-        \unexpanded{#2}%
+    \expandafter\g@addto@macro\csname tikzpagelayer@#1\expandafter\endcsname\expandafter{%
+        \expandafter\set@tikzpagemark\expandafter{\thetikzpagemark}%
+        #2%
     }%
-    #3%
-    \tikzpagemark{\thetikzpagemark-end}%
+    \edef\endtikzpagelayer{\noexpand\tikzpagemark{\thetikzpagemark-end}}%
+}{}%
+
+\newenvironment{tpframebox}[1][]{%
+    \par\vspace{2\fboxsep}%
+    \tikzpagelayer{\@tpframebox{#1}}%
+}{%
+    \endtikzpagelayer
+    \par\vspace{2\fboxsep}%
+}
+
+\def\@tpframebox#1{%
+    \ifnum\tplbeginpage=\tplendpage
+        \draw [#1] let \p1= (tplbegin), \p2 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+            (\x3-\fboxsep,\y1+\ht\strutbox+\fboxsep) rectangle (\x4+\fboxsep,\y2-\dp\strutbox-\fboxsep)
+        ;
+    \else
+        \draw [#1] let \p1= (tplbegin), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+            (\x3-\fboxsep,\y4-\dp\strutbox-\fboxsep) --  (\x3-\fboxsep,\y1+\ht\strutbox+\fboxsep) -| (\x4+\fboxsep,\y4-\dp\strutbox-\fboxsep)
+        ;
+    \fi
 }
 
 \def\set@tikzpagemark#1{%
+    \mathchardef\tplbeginpage\zref@extract{tikzpagemark-#1-begin}{abspage}\relax
+    \mathchardef\tplendpage\zref@extract{tikzpagemark-#1-end}{abspage}\relax
     \coordinate (tplbegin) at ([shift={(\zposx{tikzpagemark-#1-begin}sp,\zposy{tikzpagemark-#1-begin}sp)}]current page.south west);
     \coordinate (tplend)   at ([shift={(\zposx{tikzpagemark-#1-end}sp,\zposy{tikzpagemark-#1-end}sp)}]current page.south west);
 }
@@ -41,7 +64,8 @@
     \setbox\AtBeginShipoutBox\hbox{%
         \color@setgroup
         \begin{tikzpicture}[remember picture]%
-            \path [use as bounding box] node [inner sep=0pt,outer sep=0pt] (PAGEBOX) {\box\AtBeginShipoutBox};
+            \path [use as bounding box,every node/.style={},every rectangle node/.style={}]
+                node [inner sep=0pt,outer sep=0pt] (current page box) {\box\AtBeginShipoutBox};
             \begin{pgfonlayer}{background}
             \begin{scope}%
                 \tikzpagelayer@background
