@@ -23,25 +23,77 @@
     \edef\endtikzpagelayer{\noexpand\tikzpagemark{\thetikzpagemark-end}}%
 }{}%
 
+\newenvironment{tpframebox*}[2][]{%
+    \par
+    \begingroup
+    \tikzset{#1}\pgfmathsetmacro\tpframebox@sep{2\fboxsep+\pgflinewidth}
+    \edef\@tempa{\endgroup\def\noexpand\tpframebox@sep{\tpframebox@sep pt}}%
+    \@tempa
+    \vspace{\tpframebox@sep}%
+    \setlength{\hsize}{#2}%
+   %\addtolength{\hsize}{-\tpframebox@sep}%
+   %\addtolength{\hsize}{-\tpframebox@sep}%
+    \linewidth\hsize
+    \leftskip=\tpframebox@sep
+    \rightskip=\tpframebox@sep
+    \tikzpagelayer{\@tpframebox@s{#1}}%
+}{%
+    \endtikzpagelayer
+    \par\vspace{\tpframebox@sep}%
+}
+
 \newenvironment{tpframebox}[1][]{%
-    \par\vspace{2\fboxsep}%
+    \par
+    \begingroup
+    \tikzset{#1}\pgfmathsetmacro\tpframebox@sep{2\fboxsep+\pgflinewidth}
+    \vspace{\tpframebox@sep pt}%
+    \edef\@tempa{\endgroup\def\noexpand\tpframebox@sep{\tpframebox@sep}}%
+    \@tempa
     \tikzpagelayer{\@tpframebox{#1}}%
 }{%
     \endtikzpagelayer
-    \par\vspace{2\fboxsep}%
+    \par\vspace{\tpframebox@sep pt}%
 }
 
 \def\@tpframebox#1{%
+    \begin{scope}[#1]
     \ifnum\tplbeginpage=\tplendpage
         \draw [#1] let \p1= (tplbegin), \p2 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
-            (\x3-\fboxsep,\y1+\ht\strutbox+\fboxsep) rectangle (\x4+\fboxsep,\y2-\dp\strutbox-\fboxsep)
+            (\x3-\fboxsep-.5\pgflinewidth,\y1+\ht\strutbox+\fboxsep+.5\pgflinewidth) rectangle (\x4+\fboxsep+.5\pgflinewidth,\y2-\dp\strutbox-\fboxsep-.5\pgflinewidth)
         ;
     \else
         \draw [#1] let \p1= (tplbegin), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
-            (\x3-\fboxsep,\y4-\dp\strutbox-\fboxsep) --  (\x3-\fboxsep,\y1+\ht\strutbox+\fboxsep) -| (\x4+\fboxsep,\y4-\dp\strutbox-\fboxsep)
+            (\x3-\fboxsep-.5\pgflinewidth,\y4-\dp\strutbox-\fboxsep) --  (\x3-\fboxsep-.5\pgflinewidth,\y1+\ht\strutbox+\fboxsep+.5\pgflinewidth) -| (\x4+\fboxsep+.5\pgflinewidth,\y4-\dp\strutbox-\fboxsep)
+        ;
+        \tplonnextpage{%
+        \begin{scope}[#1]
+        \draw [#1] let \p1 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+            (\x3-\fboxsep-.5\pgflinewidth,\y3+.5\pgflinewidth) --
+            (\x3-\fboxsep-.5\pgflinewidth,\y1-\dp\strutbox-\fboxsep-.5\pgflinewidth) -|
+            (\x4+\fboxsep+.5\pgflinewidth,\y3+.5\pgflinewidth)
+          ;
+        \end{scope}%
+        }%
+    \fi
+    \end{scope}
+}
+\tikzset{tpframebox/.style={}}
+
+
+\def\@tpframebox@s#1{%
+    \begin{scope}[#1]
+    \ifnum\tplbeginpage=\tplendpage
+        \draw [#1] let \p1= (tplbegin), \p2 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+            (\x3+.5\pgflinewidth,\y1+\ht\strutbox+\fboxsep+.5\pgflinewidth) rectangle (\x4-.5\pgflinewidth,\y2-\dp\strutbox-\fboxsep-.5\pgflinewidth)
+        ;
+    \else
+        \draw [#1] let \p1= (tplbegin), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+            (\x3-\fboxsep-.5\pgflinewidth,\y4-\dp\strutbox-\fboxsep) --  (\x3-\fboxsep-.5\pgflinewidth,\y1+\ht\strutbox+\fboxsep+.5\pgflinewidth) -| (\x4+\fboxsep+.5\pgflinewidth,\y4-\dp\strutbox-\fboxsep)
         ;
     \fi
+    \end{scope}
 }
+\tikzset{tpframebox/.style={}}
 
 \def\set@tikzpagemark#1{%
     \mathchardef\tplbeginpage\zref@extract{tikzpagemark-#1-begin}{abspage}\relax
@@ -50,12 +102,36 @@
     \coordinate (tplend)   at ([shift={(\zposx{tikzpagemark-#1-end}sp,\zposy{tikzpagemark-#1-end}sp)}]current page.south west);
 }
 
+\newcommand\tplonpage[3][foreground]{%
+    \begingroup
+    \pgfmathtruncatemacro\@tplpage{#2}%
+    \expandafter\endgroup
+    \expandafter\tpl@addto\csname tikzpagelayer@#1@page\@tplpage\endcsname{#3}%
+}
+
+\def\tpl@addto#1{%
+    \ifx#1\@undefined
+        \global\let#1\empty
+    \fi
+    \g@addto@macro#1%
+}
+
+\newcommand\tplonnextpage[2][foreground]{%
+    \tplonpage[#1]{\@tplnextpage}{#2}%
+}
+
+% During the page `abspage' is one to low
+\def\@tplnextpage{\c@abspage+2}
+% In the shipout routine it is correct
+\def\@@tplnextpage{\c@abspage+1}
+
 \newcounter{tikzpagemark}
 
 \def\@tikzpagelayeron{%
-    \AtBeginShipoutNext{\tikzpagelayer@atbeginshipout}%
-    \global\let\tikzpagelayeron\relax
+   % \AtBeginShipoutNext{\tikzpagelayer@atbeginshipout}%
+   % \global\let\tikzpagelayeron\relax
 }
+\AtBeginShipout{\tikzpagelayer@atbeginshipout}%
 \let\tikzpagelayeron\@tikzpagelayeron
 \let\tikzpagelayer@background\empty
 \let\tikzpagelayer@foreground\empty
@@ -63,15 +139,18 @@
 \def\tikzpagelayer@atbeginshipout{%
     \setbox\AtBeginShipoutBox\hbox{%
         \color@setgroup
+        \let\@tplnextpage\@@tplnextpage
         \begin{tikzpicture}[remember picture]%
             \path [use as bounding box,every node/.style={},every rectangle node/.style={}]
                 node [inner sep=0pt,outer sep=0pt] (current page box) {\box\AtBeginShipoutBox};
             \begin{pgfonlayer}{background}
             \begin{scope}%
+                \csname tikzpagelayer@background@page\number\c@abspage\endcsname
                 \tikzpagelayer@background
             \end{scope}%
             \end{pgfonlayer}
             \begin{scope}%
+                \csname tikzpagelayer@foreground@page\number\c@abspage\endcsname
                 \tikzpagelayer@foreground
             \end{scope}%
         \end{tikzpicture}%

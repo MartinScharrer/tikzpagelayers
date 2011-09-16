@@ -15,9 +15,10 @@
 
 \tikzpagelayer[foreground]{\draw[red] (tplbegin) -- (tplend); 
     \scope[on background layer]\draw [thick,green] (tplbegin) |- (tplend); \endscope
-}{\lipsum*[2]\unskip}%
+}%
+\lipsum*[2]\unskip\endtikzpagelayer%
 
-\tikzpagelayer{\draw[red] (tplbegin) -- (tplend);}{\lipsum*[3]\unskip}%
+\tikzpagelayer{\draw[red] (tplbegin) -- (tplend);}{\lipsum*[3]\unskip}\endtikzpagelayer%
 
 \lipsum[3]
 
@@ -31,9 +32,9 @@
         rectangle
         ([shift={(\fboxsep,-\fboxsep-.5\pgflinewidth)}]tplend)
     ;
-}{\lipsum*[2]\unskip}%
+}{\lipsum*[2]\unskip}\endtikzpagelayer%
 
-\tikzpagelayer{\draw[red] (tplbegin) -- (tplend);}{\lipsum*[3]\unskip}%
+\tikzpagelayer{\draw[red] (tplbegin) -- (tplend);}{\lipsum*[3]\unskip}\endtikzpagelayer%
 
 \lipsum[3]
 
