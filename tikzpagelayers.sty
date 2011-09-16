@@ -58,21 +58,41 @@
 \def\@tpframebox#1{%
     \begin{scope}[#1]
     \ifnum\tplbeginpage=\tplendpage
-        \draw [#1] let \p1= (tplbegin), \p2 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+        \path [#1] let \p1= (tplbegin), \p2 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
             (\x3-\fboxsep-.5\pgflinewidth,\y1+\ht\strutbox+\fboxsep+.5\pgflinewidth) rectangle (\x4+\fboxsep+.5\pgflinewidth,\y2-\dp\strutbox-\fboxsep-.5\pgflinewidth)
         ;
     \else
-        \draw [#1] let \p1= (tplbegin), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+        \path [#1] let \p1= (tplbegin), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
             (\x3-\fboxsep-.5\pgflinewidth,\y4-\dp\strutbox-\fboxsep) --  (\x3-\fboxsep-.5\pgflinewidth,\y1+\ht\strutbox+\fboxsep+.5\pgflinewidth) -| (\x4+\fboxsep+.5\pgflinewidth,\y4-\dp\strutbox-\fboxsep)
         ;
-        \tplonnextpage{%
-        \begin{scope}[#1]
-        \draw [#1] let \p1 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
-            (\x3-\fboxsep-.5\pgflinewidth,\y3+.5\pgflinewidth) --
-            (\x3-\fboxsep-.5\pgflinewidth,\y1-\dp\strutbox-\fboxsep-.5\pgflinewidth) -|
-            (\x4+\fboxsep+.5\pgflinewidth,\y3+.5\pgflinewidth)
-          ;
-        \end{scope}%
+        \tplonpage{\tplendpage}{%
+            \begin{scope}[#1]
+            \path [#1] let \p1 = (tplend), \p3 = (current page text area.north west), \p4 = (current page text area.south east) in
+                (\x3-\fboxsep-.5\pgflinewidth,\y3+.5\pgflinewidth) --
+                (\x3-\fboxsep-.5\pgflinewidth,\y1-\dp\strutbox-\fboxsep-.5\pgflinewidth) -|
+                (\x4+\fboxsep+.5\pgflinewidth,\y3+.5\pgflinewidth)
+            ;
+            \end{scope}%
+        }%
+        \pgfmathtruncatemacro\firstmiddlepage{\tplbeginpage+1}%
+        \pgfmathtruncatemacro\lastmiddlepage{\tplendpage-1}%
+        \foreach \tplmiddlepage in {\firstmiddlepage,...,\lastmiddlepage} {%
+            \tplonpage{\tplmiddlepage}{%
+                \begin{scope}[#1]
+                \path [#1,draw=none] let \p1 = (current page text area.north west), \p2 = (current page text area.south east) in
+                    (\x1-\fboxsep-.5\pgflinewidth,\y1+.5\pgflinewidth) --
+                    (\x1-\fboxsep-.5\pgflinewidth,\y2-.5\pgflinewidth) --
+                    (\x2+\fboxsep+.5\pgflinewidth,\y2-.5\pgflinewidth) --
+                    (\x2+\fboxsep+.5\pgflinewidth,\y1+.5\pgflinewidth) -- cycle
+                ;
+                \path [#1] let \p1 = (current page text area.north west), \p2 = (current page text area.south east) in
+                    (\x1-\fboxsep-.5\pgflinewidth,\y1+.5\pgflinewidth) --
+                    (\x1-\fboxsep-.5\pgflinewidth,\y2-.5\pgflinewidth)
+                    (\x2+\fboxsep+.5\pgflinewidth,\y2-.5\pgflinewidth) --
+                    (\x2+\fboxsep+.5\pgflinewidth,\y1+.5\pgflinewidth)
+                ;
+                \end{scope}%
+            }%
         }%
     \fi
     \end{scope}
@@ -96,8 +116,8 @@
 \tikzset{tpframebox/.style={}}
 
 \def\set@tikzpagemark#1{%
-    \mathchardef\tplbeginpage\zref@extract{tikzpagemark-#1-begin}{abspage}\relax
-    \mathchardef\tplendpage\zref@extract{tikzpagemark-#1-end}{abspage}\relax
+    \edef\tplbeginpage{\zref@extract{tikzpagemark-#1-begin}{abspage}}%
+    \edef\tplendpage{\zref@extract{tikzpagemark-#1-end}{abspage}}%
     \coordinate (tplbegin) at ([shift={(\zposx{tikzpagemark-#1-begin}sp,\zposy{tikzpagemark-#1-begin}sp)}]current page.south west);
     \coordinate (tplend)   at ([shift={(\zposx{tikzpagemark-#1-end}sp,\zposy{tikzpagemark-#1-end}sp)}]current page.south west);
 }
